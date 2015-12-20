@@ -5,7 +5,7 @@
 #include <IRremote.h>
 // ---------------------------------------------------------------------------
 
-#define DEBUG_
+#define DEBUG2_
 
 #define BUZZ_TONE 300
 #define BUZZ_DUR 500l
@@ -237,7 +237,7 @@ void displayMap() {
 void displayGraph() {
   int color;
 
-  #ifdef DEBUG2_
+  #ifdef DEBUG_
   Serial.print("Closest reading from: ");
   Serial.print(closestSensor);
   Serial.print("was: ");
