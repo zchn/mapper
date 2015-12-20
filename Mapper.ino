@@ -15,11 +15,13 @@
 #define SHIFT_IN_THRESHOLD -2
 #define SHIFT_OUT_THRESHOLD 2
 
+#define MAP_DISPLAY_TIERS 3
 
 int buzzing_, shining_;
 unsigned long buzz_until_, shine_until_;
 #define SONAR_NUM    8    // Number of sonar sensors we are reading.
 #define MAX_DISTANCE 200 // Maximum distance (in cm) to ping.
+#define MIN_DISTANCE 0 // Maximum distance (in cm) to ping.
 #define PING_INTERVAL 30 // Milliseconds between sensor pings (29ms is about the min to avoid cross-sensor echo).
 
 unsigned long pingTimer[SONAR_NUM]; // Holds the times when the next ping should happen for each sensor.
@@ -28,6 +30,9 @@ uint8_t currentSensor = 0;          // Keeps track of which sensor is active.
 
 unsigned int closestReading, prevClosestReading;       // The closest reading from all of the sensors
 uint8_t closestSensor, prevClosestSensor;              // The sensor that had the closest reading
+
+unsigned int farthestReading, prevFarthestReading;       // The closest reading from all of the sensors
+uint8_t farthestSensor, prevFarthestSensor;              // The sensor that had the closest reading
 
 // Avoid using 0,1 which are UART
 #define RX_ 0
@@ -132,8 +137,10 @@ void setup() {
   for (uint8_t i = 1; i < SONAR_NUM; i++) {  // Set the starting time for each sensor.
     pingTimer[i] = pingTimer[i - 1] + PING_INTERVAL;
   }
-  closestSensor = 0;
+  farthestReading = MIN_DISTANCE;
+  farthestSensor = 0;
   closestReading = MAX_DISTANCE;
+  closestSensor = 0;
   objects = 0l;
 }
 
@@ -187,8 +194,11 @@ void echoCheck() { // If ping received, set this sensor's distance
 void oneSensorCycle() { // Sensor ping cycle complete, do something with the results.
   prevClosestSensor = closestSensor;
   prevClosestReading = closestReading;
-  
   closestReading = MAX_DISTANCE;
+  
+  prevFarthestSensor = farthestSensor;
+  prevFarthestReading = farthestReading;
+  farthestReading = MIN_DISTANCE;
   
   for (uint8_t i = 0; i < SONAR_NUM; i++) {
     #ifdef DEBUG_
@@ -223,16 +233,66 @@ void refreshDisplay() {
 }
 
 void displayMap() {
-  int color;
+  int range = farthestReading - closestReading;
+//HERE
+  Serial.print("closest, farthest: ");
+  Serial.print(closestReading);
+  Serial.print(",");
+  Serial.println(farthestReading);
 
-  int movement = closestReading - prevClosestReading;
   matrix.clear();      // clear display
   for (int sensor=0;sensor < SONAR_NUM; sensor++) {
-    color = LED_RED;
-    matrix.drawPixel(sensor, scaled(cm[sensor], 0, MAX_DISTANCE, 0, 7), color);
+    int color;
+    int x=0,y=0;
+    int scaled_distance = int((MAP_DISPLAY_TIERS) / range * cm[sensor] + 0.5);
+    
+    switch(sensor) {
+      case 0:
+      case 1:
+        x=MAP_DISPLAY_TIERS + sensor;
+        y=MAP_DISPLAY_TIERS+1 + scaled_distance;
+        break;;
+      case 2:
+      case 3:
+        x=MAP_DISPLAY_TIERS+1 - scaled_distance;
+        y=MAP_DISPLAY_TIERS + (3 - sensor);
+        break;;
+      case 4:
+      case 5:
+        y=MAP_DISPLAY_TIERS - scaled_distance;
+        x=MAP_DISPLAY_TIERS + (5 - sensor);
+        break;;
+      case 6:
+      case 7:
+        x=MAP_DISPLAY_TIERS - scaled_distance;
+        y=MAP_DISPLAY_TIERS + (7 - sensor);
+        break;;
+    }
+    
+    if (cm[sensor] == closestReading) {
+      color = LED_RED;
+    } else if (cm[sensor] == farthestReading) {
+      color = LED_GREEN;
+    } else {
+      color = LED_YELLOW;
+    }
+    #ifdef DEBUG_
+    Serial.print("sensor: ");
+    Serial.print(sensor);
+    Serial.print(" distance: ");
+    Serial.print(cm[sensor]);
+    Serial.print(" x,y: ");
+    Serial.print(x);
+    Serial.print(",");
+    Serial.print(y);
+    Serial.print(" color: ");
+    Serial.println(color);
+    #endif
+    matrix.drawPixel(x, y, color);
   }
   matrix.writeDisplay();  // write the changes we just made to the display
 }
+
 
 void displayGraph() {
   int color;
