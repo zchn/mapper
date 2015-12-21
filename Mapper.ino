@@ -11,9 +11,8 @@
 #define BUZZ_DUR 500l
 #define SHINE_DUR 1000l
 
-#define CLOSE_THRESHOLD 3
-#define SHIFT_IN_THRESHOLD -2
-#define SHIFT_OUT_THRESHOLD 2
+#define SHIFT_IN_THRESHOLD -25
+#define SHIFT_OUT_THRESHOLD 25
 
 #define MAP_DISPLAY_TIERS 3
 
@@ -179,16 +178,20 @@ void refreshSensors() {
       if (i == 0 && currentSensor == SONAR_NUM - 1) oneSensorCycle(); // Sensor ping cycle complete, do something with the results.
       sonar[currentSensor].timer_stop();          // Make sure previous timer is canceled before starting a new ping (insurance).
       currentSensor = i;                          // Sensor being accessed.
-      cm[currentSensor] = 0;                      // Make distance zero in case there's no ping echo for this sensor.
       sonar[currentSensor].ping_timer(echoCheck); // Do the ping (processing continues, interrupt will call echoCheck to look for echo).
     }
   }
 }
 
 void echoCheck() { // If ping received, set this sensor's distance
-  if (sonar[currentSensor].check_timer())
-    prev_cm[currentSensor] = cm[currentSensor];
-  cm[currentSensor] = sonar[currentSensor].ping_result / US_ROUNDTRIP_CM;
+  if (sonar[currentSensor].check_timer()) {
+    int pingReading = sonar[currentSensor].ping_result;
+    int pingDistance = pingReading / US_ROUNDTRIP_CM;
+    if (pingDistance != 0) {
+      prev_cm[currentSensor] = cm[currentSensor];
+      cm[currentSensor] = pingDistance;
+    }
+  }
 }
 
 void oneSensorCycle() { // Sensor ping cycle complete, do something with the results.
@@ -234,12 +237,12 @@ void refreshDisplay() {
 
 void displayMap() {
   int range = farthestReading - closestReading;
-//HERE
+  #ifdef DEBUG_
   Serial.print("closest, farthest: ");
   Serial.print(closestReading);
   Serial.print(",");
   Serial.println(farthestReading);
-
+  #endif
   matrix.clear();      // clear display
   for (int sensor=0;sensor < SONAR_NUM; sensor++) {
     int color;
@@ -293,7 +296,6 @@ void displayMap() {
   matrix.writeDisplay();  // write the changes we just made to the display
 }
 
-
 void displayGraph() {
   int color;
 
@@ -303,24 +305,14 @@ void displayGraph() {
   Serial.print("was: ");
   Serial.println(closestReading);
   #endif
-  int movement = closestReading - prevClosestReading;
   matrix.clear();      // clear display
-  #ifdef DEBUG_
-  //Serial.print("scaled readings: ");
-  #endif
   for (int sensor=0;sensor < SONAR_NUM; sensor++) {
-    int shift = cm[sensor] - prev_cm[sensor];
+    int shift = (signed int) cm[sensor] - (signed int) prev_cm[sensor];
     if (shift >= SHIFT_OUT_THRESHOLD) color = LED_RED;
     else if (shift <= SHIFT_IN_THRESHOLD) color = LED_GREEN;
     else color = LED_YELLOW;
-    matrix.drawPixel(sensor, scaled(cm[sensor], 0, MAX_DISTANCE, 0, 7), color);
-    #ifdef DEBUG_
-    //Serial.print(scaled(cm[sensor], 0, MAX_DISTANCE, 0, 7));
-    #endif
-  }
-  #ifdef DEBUG_
-  //Serial.println();
-  #endif
+    matrix.drawPixel(sensor, scaled(cm[sensor], MIN_DISTANCE, MAX_DISTANCE, 0, 7), color);
+   }
   matrix.writeDisplay();  // write the changes we just made to the display
 }
 
