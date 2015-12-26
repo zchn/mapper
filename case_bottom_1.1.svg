@@ -15,7 +15,10 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="case_top.svg">
+   sodipodi:docname="case_bottom_1.1.svg"
+   inkscape:export-filename="/Users/raymond/workspace/Mapper/case_bottom.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -25,16 +28,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.0664062"
-     inkscape:cx="211.61285"
-     inkscape:cy="905.26429"
+     inkscape:zoom="0.52287613"
+     inkscape:cx="836.07847"
+     inkscape:cy="351.87496"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1366"
-     inkscape:window-height="692"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
+     inkscape:window-width="1920"
+     inkscape:window-height="1018"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata7">
@@ -52,20 +55,13 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <rect
-       style="fill:none;fill-opacity:0;stroke:#000000;stroke-width:1.63580322;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect4136"
-       width="718.3642"
-       height="718.3642"
-       x="12.364411"
-       y="-730.54724"
-       transform="scale(1,-1)" />
-    <rect
-       style="fill:none;fill-opacity:0;stroke:#ff0000;stroke-width:1.05202985;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect4140"
-       width="106.94797"
-       height="106.94797"
-       x="318.07254"
-       y="317.89117" />
+    <path
+       style="fill:none;stroke:#0000ff;stroke-width:1;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+       d="m 219.74509,273.56372 303.60284,0 0,195.60284 -303.60284,0 z"
+       id="rect4140" />
+    <path
+       style="fill:none;stroke:#ff0000;stroke-width:1.168;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 358.24092,715.96641 0,21.88116 23.11897,-2e-4 0,-21.88091 325.75772,-0.12994 0,-326.11978 21.88049,0 5.1e-4,-23.11899 -21.88154,0 0,-325.392 -325.7573,0.126678 0,-21.881124 -23.119,1.34e-4 0,21.880857 -325.757218,-0.104786 0,325.370271 -21.88158,0 6.79e-4,23.11914 21.880222,0 0,326.30389 68.551437,-0.0536 0,-21.83138 95.59049,0 0,21.83138 z"
+       id="rect5290-3" />
   </g>
 </svg>
