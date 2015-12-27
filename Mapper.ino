@@ -1,3 +1,16 @@
+/*
+ * @author("Raymond Blum" <raymond@insanegiantrobots.com>)
+ *
+ * Various mapping of N distance sensors to an LED matrix with IR remote display mode switching.
+ *
+ * Copyright (c) 2015 by Raymond Blum
+ * This software is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published  by the Free Software Foundation; eitfher
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ **/
+ 
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_LEDBackpack.h>
@@ -5,7 +18,7 @@
 #include <IRremote.h>
 // ---------------------------------------------------------------------------
 
-#define DEBUG2_
+// #define DEBUG_
 
 #define BUZZ_TONE 300
 #define BUZZ_DUR 500l
@@ -113,10 +126,10 @@ typedef struct spotNode {
 spotNode* objects;
 
 void setup() {
-#ifdef DEBUG_
+  #ifdef DEBUG_
   Serial.begin(115200);
   Serial.println("setup()");
-#endif
+  #endif
   pinMode(LED_, OUTPUT);
   pinMode(BUZZER_, OUTPUT);
   buzz();
@@ -146,12 +159,12 @@ void setup() {
 }
 
 void stopBuzzing() {
-#ifdef DEBUG_
+  #ifdef DEBUG_
   Serial.println("stopBuzzing");
-#endif
+  #endif
   buzzing_ = 0;
   buzz_until_ = 0l;
-  //noTone(BUZZER_);
+  noTone(BUZZER_);
 }
 
 void stopShining() {
@@ -206,45 +219,45 @@ void updateSensorStats() { // Sensor ping  complete, reexmine the full set of re
   farthestReading = MIN_DISTANCE;
 
   for (uint8_t i = 0; i < SONAR_NUM; i++) {
-#ifdef DEBUG_
+    #ifdef DEBUG_
     Serial.print(i);
     Serial.print("=");
     Serial.print(cm[i]);
     Serial.print("cm ");
-#endif
+    #endif
     if (cm[i] < closestReading) {
       closestReading = cm[i];
       closestSensor = i;
-#ifdef DEBUG_
+      #ifdef DEBUG_
       Serial.print("Set closest to: ");
       Serial.print(closestReading);
       Serial.print(" for sensor: ");
       Serial.println(closestSensor);
-#endif
+      #endif
     }
     if (cm[i] > farthestReading) {
       farthestReading = cm[i];
       farthestSensor = i;
-#ifdef DEBUG_
+      #ifdef DEBUG_
       Serial.print("Set farthest to: ");
       Serial.print(farthestReading);
       Serial.print(" for sensor: ");
       Serial.println(farthestSensor);
-#endif
+      #endif
     }
   }
-#ifdef DEBUG_
+  #ifdef DEBUG_
   Serial.println();
-#endif
+  #endif
   displayed_ = 0;
 }
 
 void refreshDisplay() {
   if (!displayed_) {
-#ifdef DEBUG_
+    #ifdef DEBUG_
     Serial.print("refresh ");
     Serial.println(display_mode_);
-#endif
+    #endif
     switch (display_mode_) {
       case DISPLAY_MODE_HISTOGRAM:
         displayGraph();
@@ -258,13 +271,12 @@ void refreshDisplay() {
 }
 
 void displayMap() {
-  int range = farthestReading - closestReading;
-#ifdef DEBUG_
+  #ifdef DEBUG_
   Serial.print("closest, farthest: ");
   Serial.print(closestReading);
   Serial.print(",");
   Serial.println(farthestReading);
-#endif
+  #endif
   matrix.clear();      // clear display
   mapSensorSet(0, 7);
   mapSensorSet(2, 1);
@@ -321,12 +333,12 @@ int mapColor(int distance1, int distance2) {
 void displayGraph() {
   int color;
 
-#ifdef DEBUG_
+  #ifdef DEBUG_
   Serial.print("Closest reading from: ");
   Serial.print(closestSensor);
   Serial.print("was: ");
   Serial.println(closestReading);
-#endif
+  #endif
   matrix.clear();      // clear display
   for (int sensor = 0; sensor < SONAR_NUM; sensor++) {
     int shift = (signed int) cm[sensor] - (signed int) prev_cm[sensor];
@@ -344,10 +356,10 @@ int scaled(int num, int min, int max, int target_min, int target_max) {
 
 void buzz() {
   buzz_until_ = millis() + BUZZ_DUR;
-#ifdef DEBUG_
+  #ifdef DEBUG_
   Serial.print("buzz until");
   Serial.println(buzz_until_);
-#endif
+  #endif
 }
 
 void shine() {
@@ -367,22 +379,18 @@ void shineLed() {
 
 
 void playBuzz() {
-#ifdef DEBUG_
-  //Serial.println((buzzing_)?"buzzing":"not buzzing");
-#endif
-
   if (buzzing_) {
     if (buzz_until_ < millis()) {
-#ifdef DEBUG_
+      #ifdef DEBUG_
       Serial.println("buzz expired");
-#endif
+      #endif
       stopBuzzing();
     }
   } else if (buzz_until_ > 0) {
-#ifdef DEBUG_
+    #ifdef DEBUG_
     Serial.println("start buzzing");
-#endif
-    //tone(BUZZER_, BUZZ_TONE);
+    #endif
+    tone(BUZZER_, BUZZ_TONE);
     buzzing_ = 1;
   }
 }
@@ -397,9 +405,10 @@ void readRemote() {
 void handleCmd() {
   if (remote_cmd_ != REMOTE_CMD_NONE) {
     shine();
-#ifdef DEBUG_
+    buzz();
+    #ifdef DEBUG_
     Serial.println("Processed remote cmd");
-#endif
+    #endif
     remote_cmd_ = REMOTE_CMD_NONE;
     switch (display_mode_) {
       case DISPLAY_MODE_HISTOGRAM:
