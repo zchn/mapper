@@ -27,7 +27,6 @@ unsigned long buzz_until_, shine_until_;
 unsigned long pingTimer[SONAR_NUM]; // Holds the times when the next ping should happen for each sensor.
 unsigned int cm[SONAR_NUM], prev_cm[SONAR_NUM];     // Where the ping distances are stored.
 uint8_t currentSensor = 0;          // Keeps track of which sensor is active.
-int *sensorMapped_;  // Keep track of sensors applied to the map display
 
 unsigned int closestReading, prevClosestReading;       // The closest reading from all of the sensors
 uint8_t closestSensor, prevClosestSensor;              // The sensor that had the closest reading
@@ -114,27 +113,27 @@ typedef struct spotNode {
 spotNode* objects;
 
 void setup() {
-  #ifdef DEBUG_
+#ifdef DEBUG_
   Serial.begin(115200);
   Serial.println("setup()");
-  #endif
+#endif
   pinMode(LED_, OUTPUT);
   pinMode(BUZZER_, OUTPUT);
   buzz();
   shine();
-  
+
   display_mode_ = DISPLAY_MODE_HISTOGRAM;
   displayed_ = 0;
-  
+
   irrecv.enableIRIn(); // Start the receiver
   matrix.begin(0x70);  // pass in the address
-    matrix.clear();      // clear display
+  matrix.clear();      // clear display
   matrix.drawPixel(1, 1, LED_YELLOW);
   matrix.drawPixel(1, 2, LED_GREEN);
   matrix.drawPixel(2, 1, LED_RED);
   matrix.writeDisplay();  // write the changes we just made to the display
 
-    digitalWrite(LED_, LOW);
+  digitalWrite(LED_, LOW);
   pingTimer[0] = millis() + 75;              // First ping starts at 75ms, gives time for the Arduino to chill before starting.
   for (uint8_t i = 1; i < SONAR_NUM; i++) {  // Set the starting time for each sensor.
     pingTimer[i] = pingTimer[i - 1] + PING_INTERVAL;
@@ -147,12 +146,12 @@ void setup() {
 }
 
 void stopBuzzing() {
-  #ifdef DEBUG_
+#ifdef DEBUG_
   Serial.println("stopBuzzing");
-  #endif
+#endif
   buzzing_ = 0;
   buzz_until_ = 0l;
-  noTone(BUZZER_);
+  //noTone(BUZZER_);
 }
 
 void stopShining() {
@@ -201,58 +200,58 @@ void updateSensorStats() { // Sensor ping  complete, reexmine the full set of re
   prevClosestSensor = closestSensor;
   prevClosestReading = closestReading;
   closestReading = MAX_DISTANCE;
-  
+
   prevFarthestSensor = farthestSensor;
   prevFarthestReading = farthestReading;
   farthestReading = MIN_DISTANCE;
-  
+
   for (uint8_t i = 0; i < SONAR_NUM; i++) {
-    #ifdef DEBUG_
+#ifdef DEBUG_
     Serial.print(i);
     Serial.print("=");
     Serial.print(cm[i]);
     Serial.print("cm ");
-    #endif
+#endif
     if (cm[i] < closestReading) {
       closestReading = cm[i];
       closestSensor = i;
-      #ifdef DEBUG_
+#ifdef DEBUG_
       Serial.print("Set closest to: ");
       Serial.print(closestReading);
       Serial.print(" for sensor: ");
       Serial.println(closestSensor);
-      #endif
+#endif
     }
     if (cm[i] > farthestReading) {
       farthestReading = cm[i];
       farthestSensor = i;
-      #ifdef DEBUG_
+#ifdef DEBUG_
       Serial.print("Set farthest to: ");
       Serial.print(farthestReading);
       Serial.print(" for sensor: ");
       Serial.println(farthestSensor);
-      #endif
+#endif
     }
   }
-  #ifdef DEBUG_
+#ifdef DEBUG_
   Serial.println();
-  #endif
+#endif
   displayed_ = 0;
 }
 
 void refreshDisplay() {
   if (!displayed_) {
-    #ifdef DEBUG_
+#ifdef DEBUG_
     Serial.print("refresh ");
     Serial.println(display_mode_);
-    #endif
+#endif
     switch (display_mode_) {
-       case DISPLAY_MODE_HISTOGRAM:
-         displayGraph();
-         break;;
-       case DISPLAY_MODE_MAP:
-         displayMap();
-         break;;
+      case DISPLAY_MODE_HISTOGRAM:
+        displayGraph();
+        break;;
+      case DISPLAY_MODE_MAP:
+        displayMap();
+        break;;
     }
     displayed_ = 1;
   }
@@ -260,91 +259,82 @@ void refreshDisplay() {
 
 void displayMap() {
   int range = farthestReading - closestReading;
-  sensorMapped_= new int[8] {0,0,0,0,0,0,0,0};
-  #ifdef DEBUG_
+#ifdef DEBUG_
   Serial.print("closest, farthest: ");
   Serial.print(closestReading);
   Serial.print(",");
   Serial.println(farthestReading);
-  #endif
+#endif
   matrix.clear();      // clear display
-  mapSensorSet(0,7);
-  mapSensorSet(1,2);
-  mapSensorSet(3,4);
-  mapSensorSet(5,6);
+  mapSensorSet(0, 7);
+  mapSensorSet(2, 1);
+  mapSensorSet(4, 3);
+  mapSensorSet(6, 5);
   matrix.writeDisplay();  // write the changes we just made to the display
 }
 
-void mapSensorSet(int sensor1, int sensor2, int sensor3) {
-  int range=0;
-  for (int sensor=0;sensor < SONAR_NUM; sensor++) {
-    int color;
-    int x=0,y=0;
-    int scaled_distance = int((MAP_DISPLAY_TIERS) / range * cm[sensor] + 0.5);
-    
-    switch(sensor) {
-      case 0:
-      case 1:
-        x=MAP_DISPLAY_TIERS + sensor;
-        y=MAP_DISPLAY_TIERS+1 + scaled_distance;
-        break;;
-      case 2:
-      case 3:
-        x=MAP_DISPLAY_TIERS+1 - scaled_distance;
-        y=MAP_DISPLAY_TIERS + (3 - sensor);
-        break;;
-      case 4:
-      case 5:
-        y=MAP_DISPLAY_TIERS - scaled_distance;
-        x=MAP_DISPLAY_TIERS + (5 - sensor);
-        break;;
-      case 6:
-      case 7:
-        x=MAP_DISPLAY_TIERS - scaled_distance;
-        y=MAP_DISPLAY_TIERS + (7 - sensor);
-        break;;
-    }
-    
-    if (cm[sensor] == closestReading) {
-      color = LED_RED;
-    } else if (cm[sensor] == farthestReading) {
-      color = LED_GREEN;
-    } else {
-      color = LED_YELLOW;
-    }
-   #ifdef DEBUG_
-    Serial.print("sensor: ");
-    Serial.print(sensor);
-    Serial.print(" distance: ");
-    Serial.print(cm[sensor]);
-    Serial.print(" x,y: ");
-    Serial.print(x);
-    Serial.print(",");
-    Serial.print(y);
-    Serial.print(" color: ");
-    Serial.println(color);
-    #endif
-    matrix.drawPixel(x, y, color);
+void mapSensorSet(int CCSensor, int counterCCSensor) {
+  int color = LED_YELLOW;
+  int x = 0, y = 0;
+
+  int scaledCC = scaled(cm[CCSensor], MIN_DISTANCE, MAX_DISTANCE, 0, MAP_DISPLAY_TIERS+1);
+  int scaledCounter = scaled(cm[counterCCSensor], MIN_DISTANCE, MAX_DISTANCE, 0, MAP_DISPLAY_TIERS+1);
+  switch (CCSensor) {
+    case 0:
+      y = MAP_DISPLAY_TIERS + 1 + scaledCC;
+      x = MAP_DISPLAY_TIERS - scaledCounter;
+      color = mapColor(scaledCC, scaledCounter);
+      matrix.drawPixel(x, y, color);
+      break;
+    case 2:
+      x = MAP_DISPLAY_TIERS + 1 + scaledCounter;
+      y = MAP_DISPLAY_TIERS + 1 + scaledCC;
+      color = mapColor(scaledCC, scaledCounter);
+      matrix.drawPixel(x, y, color);
+      break;
+    case 4:
+      x = MAP_DISPLAY_TIERS + 1 + scaledCounter;
+      y = MAP_DISPLAY_TIERS - scaledCC;
+      color = mapColor(scaledCC, scaledCounter);
+      matrix.drawPixel(x, y, color);
+      break;
+    case 6:
+      x = MAP_DISPLAY_TIERS - scaledCC;
+      y = MAP_DISPLAY_TIERS - scaledCounter;
+      color = mapColor(scaledCC, scaledCounter);
+      matrix.drawPixel(x, y, color);
+      break;
   }
+}
+
+int mapColor(int distance1, int distance2) {
+  int color = LED_YELLOW;
+  if (max(distance1, distance2) == MAP_DISPLAY_TIERS) {
+    color = LED_RED;
+  }
+  if (min(distance1, distance2) == 0) {
+    color = LED_GREEN;
+  }
+  return color;
 }
 
 void displayGraph() {
   int color;
 
-  #ifdef DEBUG_
+#ifdef DEBUG_
   Serial.print("Closest reading from: ");
   Serial.print(closestSensor);
   Serial.print("was: ");
   Serial.println(closestReading);
-  #endif
+#endif
   matrix.clear();      // clear display
-  for (int sensor=0;sensor < SONAR_NUM; sensor++) {
+  for (int sensor = 0; sensor < SONAR_NUM; sensor++) {
     int shift = (signed int) cm[sensor] - (signed int) prev_cm[sensor];
     if (shift >= SHIFT_OUT_THRESHOLD) color = LED_RED;
     else if (shift <= SHIFT_IN_THRESHOLD) color = LED_GREEN;
     else color = LED_YELLOW;
     matrix.drawPixel(sensor, scaled(cm[sensor], MIN_DISTANCE, MAX_DISTANCE, 0, 8), color);
-   }
+  }
   matrix.writeDisplay();  // write the changes we just made to the display
 }
 
@@ -354,10 +344,10 @@ int scaled(int num, int min, int max, int target_min, int target_max) {
 
 void buzz() {
   buzz_until_ = millis() + BUZZ_DUR;
-  #ifdef DEBUG_
+#ifdef DEBUG_
   Serial.print("buzz until");
   Serial.println(buzz_until_);
-  #endif
+#endif
 }
 
 void shine() {
@@ -377,25 +367,25 @@ void shineLed() {
 
 
 void playBuzz() {
-      #ifdef DEBUG_
-      //Serial.println((buzzing_)?"buzzing":"not buzzing");
-      #endif
+#ifdef DEBUG_
+  //Serial.println((buzzing_)?"buzzing":"not buzzing");
+#endif
 
   if (buzzing_) {
     if (buzz_until_ < millis()) {
-      #ifdef DEBUG_
+#ifdef DEBUG_
       Serial.println("buzz expired");
-      #endif
+#endif
       stopBuzzing();
     }
   } else if (buzz_until_ > 0) {
-      #ifdef DEBUG_
-      Serial.println("start buzzing");
-      #endif
-      tone(BUZZER_, BUZZ_TONE);
-      buzzing_ = 1;
-    }
+#ifdef DEBUG_
+    Serial.println("start buzzing");
+#endif
+    //tone(BUZZER_, BUZZ_TONE);
+    buzzing_ = 1;
   }
+}
 
 void readRemote() {
   if (irrecv.decode(&results)) {
@@ -407,9 +397,9 @@ void readRemote() {
 void handleCmd() {
   if (remote_cmd_ != REMOTE_CMD_NONE) {
     shine();
-    #ifdef DEBUG_
+#ifdef DEBUG_
     Serial.println("Processed remote cmd");
-    #endif
+#endif
     remote_cmd_ = REMOTE_CMD_NONE;
     switch (display_mode_) {
       case DISPLAY_MODE_HISTOGRAM:
