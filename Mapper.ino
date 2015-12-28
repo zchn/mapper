@@ -103,7 +103,7 @@ Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 int remote_cmd_;
 
 #define DISPLAY_MODE_HISTOGRAM 0
-#define DISPLAY_MODE_MAP 1
+#define DISPLAY_MODE_QUADRANTS 1
 int display_mode_;
 
 typedef struct point {
@@ -262,15 +262,15 @@ void refreshDisplay() {
       case DISPLAY_MODE_HISTOGRAM:
         displayGraph();
         break;;
-      case DISPLAY_MODE_MAP:
-        displayMap();
+      case DISPLAY_MODE_QUADRANTS:
+        displayQuadrantMap();
         break;;
     }
     displayed_ = 1;
   }
 }
 
-void displayMap() {
+void displayQuadrantMap() {
   #ifdef DEBUG_
   Serial.print("closest, farthest: ");
   Serial.print(closestReading);
@@ -278,14 +278,14 @@ void displayMap() {
   Serial.println(farthestReading);
   #endif
   matrix.clear();      // clear display
-  mapSensorSet(0, 7);
-  mapSensorSet(2, 1);
-  mapSensorSet(4, 3);
-  mapSensorSet(6, 5);
+  mapQuadrantForSensors(0, 7);
+  mapQuadrantForSensors(2, 1);
+  mapQuadrantForSensors(4, 3);
+  mapQuadrantForSensors(6, 5);
   matrix.writeDisplay();  // write the changes we just made to the display
 }
 
-void mapSensorSet(int CCSensor, int counterCCSensor) {
+void mapQuadrantForSensors(int CCSensor, int counterCCSensor) {
   int color = LED_YELLOW;
   int x = 0, y = 0;
 
@@ -402,22 +402,26 @@ void readRemote() {
   }
 }
 
+/*
+When any command is received, toggle the display mode.
+*/
 void handleCmd() {
   if (remote_cmd_ != REMOTE_CMD_NONE) {
+    // we've received a command
     shine();
     buzz();
     #ifdef DEBUG_
     Serial.println("Processed remote cmd");
     #endif
-    remote_cmd_ = REMOTE_CMD_NONE;
     switch (display_mode_) {
       case DISPLAY_MODE_HISTOGRAM:
-        display_mode_ = DISPLAY_MODE_MAP;
+        display_mode_ = DISPLAY_MODE_QUADRANTS;
         break;;
-      case DISPLAY_MODE_MAP:
+      case DISPLAY_MODE_QUADRANTS:
         display_mode_ = DISPLAY_MODE_HISTOGRAM;
         break;;
     }
+  remote_cmd_ = REMOTE_CMD_NONE;  // Reset our command tracking
   }
 }
 
