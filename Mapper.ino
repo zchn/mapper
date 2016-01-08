@@ -135,7 +135,7 @@ void setup() {
   buzz();
   shine();
 
-  display_mode_ = DISPLAY_MODE_HISTOGRAM;
+  display_mode_ = DISPLAY_MODE_QUADRANTS;
   displayed_ = 0;
 
   irrecv.enableIRIn(); // Start the receiver
@@ -293,26 +293,26 @@ void mapQuadrantForSensors(int CCSensor, int counterCCSensor) {
   int scaledCounter = scaled(cm[counterCCSensor], MIN_DISTANCE, MAX_DISTANCE, 0, MAP_DISPLAY_TIERS+1);
   switch (CCSensor) {
     case 0:
+      x = MAP_DISPLAY_TIERS + 1 + scaledCounter;
       y = MAP_DISPLAY_TIERS + 1 + scaledCC;
-      x = MAP_DISPLAY_TIERS - scaledCounter;
       color = mapColor(scaledCC, scaledCounter);
       matrix.drawPixel(x, y, color);
       break;
     case 2:
-      x = MAP_DISPLAY_TIERS + 1 + scaledCounter;
-      y = MAP_DISPLAY_TIERS + 1 + scaledCC;
-      color = mapColor(scaledCC, scaledCounter);
-      matrix.drawPixel(x, y, color);
-      break;
-    case 4:
-      x = MAP_DISPLAY_TIERS + 1 + scaledCounter;
-      y = MAP_DISPLAY_TIERS - scaledCC;
+      y = MAP_DISPLAY_TIERS + 1 + scaledCounter;
+      x = MAP_DISPLAY_TIERS - scaledCC;
       color = mapColor(scaledCC, scaledCounter);
       matrix.drawPixel(x, y, color);
       break;
     case 6:
-      x = MAP_DISPLAY_TIERS - scaledCC;
+      x = MAP_DISPLAY_TIERS + 1 + scaledCC;
       y = MAP_DISPLAY_TIERS - scaledCounter;
+      color = mapColor(scaledCC, scaledCounter);
+      matrix.drawPixel(x, y, color);
+      break;
+    case 4:
+      x = MAP_DISPLAY_TIERS - scaledCounter;
+      y = MAP_DISPLAY_TIERS - scaledCC;
       color = mapColor(scaledCC, scaledCounter);
       matrix.drawPixel(x, y, color);
       break;
