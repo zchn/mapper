@@ -33,9 +33,9 @@ int buzzing_, shining_;
 int displayed_;
 unsigned long buzz_until_, shine_until_;
 #define SONAR_NUM    8    // Number of sonar sensors we are reading.
-#define MAX_DISTANCE 200 // Maximum distance (in cm) to ping.
+#define MAX_DISTANCE 150 // Maximum distance (in cm) to ping.
 #define MIN_DISTANCE 0 // Maximum distance (in cm) to ping.
-#define PING_INTERVAL 30 // Milliseconds between sensor pings (29ms is about the min to avoid cross-sensor echo).
+#define PING_INTERVAL 35 // Milliseconds between sensor pings (29ms is about the min to avoid cross-sensor echo).
 
 unsigned long pingTimer[SONAR_NUM]; // Holds the times when the next ping should happen for each sensor.
 unsigned int cm[SONAR_NUM], prev_cm[SONAR_NUM];     // Where the ping distances are stored.
@@ -56,10 +56,10 @@ uint8_t farthestSensor, prevFarthestSensor;              // The sensor that had 
 #define SCL_ 19
 
 // Connect an IR sensor on pin 2
-#define IR_SENSOR_ 2
+#define IR_SENSOR_ 4
 
 // Connect a speaker or buzzer on pin 3
-#define BUZZER_ 3
+#define BUZZER_ 7
 
 // There's a built in LED on 13, hook any additional one to the same pin
 #define LED_ 13
@@ -67,15 +67,19 @@ uint8_t farthestSensor, prevFarthestSensor;              // The sensor that had 
 // Use pins 5-12 on side 1, skip 13 (LED) 18:19 (i2C) on side 2
 NewPing sonar[SONAR_NUM] = {     // Sensor object array.
   // side 1
-  NewPing(5, 6, MAX_DISTANCE), // Each sensor's trigger pin, echo pin, and max distance to ping.
-  NewPing(7, 8, MAX_DISTANCE),
-  NewPing(9, 10, MAX_DISTANCE),
+  NewPing(2, 3, MAX_DISTANCE), // Each sensor's trigger pin, echo pin, and max distance to ping.
+  NewPing(5, 6, MAX_DISTANCE),
+  
+  NewPing(21, 20, MAX_DISTANCE),
+  NewPing(23, 22, MAX_DISTANCE),
+  
+  // side 2  
+  NewPing(15, 14, MAX_DISTANCE),
+  NewPing(17, 16, MAX_DISTANCE),
+  
+  NewPing(8, 9, MAX_DISTANCE),
   NewPing(11, 12, MAX_DISTANCE),
-  // side 2
-  NewPing(14, 15, MAX_DISTANCE),
-  NewPing(16, 17, MAX_DISTANCE),
-  NewPing(20, 21, MAX_DISTANCE),
-  NewPing(22, 23, MAX_DISTANCE),
+
 };
 
 IRrecv irrecv(IR_SENSOR_);
@@ -126,10 +130,8 @@ typedef struct spotNode {
 spotNode* objects;
 
 void setup() {
-  #ifdef DEBUG_
   Serial.begin(115200);
   Serial.println("setup()");
-  #endif
   pinMode(LED_, OUTPUT);
   pinMode(BUZZER_, OUTPUT);
   buzz();
@@ -198,6 +200,9 @@ void refreshSensors() {
 }
 
 void echoCheck() { // If ping received, set this sensor's distance
+  #ifdef DEBUG_
+  // Serial.println("echoCheck()");
+  #endif
   if (sonar[currentSensor].check_timer()) {
     int pingReading = sonar[currentSensor].ping_result;
     int pingDistance = pingReading / US_ROUNDTRIP_CM;
@@ -229,20 +234,20 @@ void updateSensorStats() { // Sensor ping  complete, reexmine the full set of re
       closestReading = cm[i];
       closestSensor = i;
       #ifdef DEBUG_
-      Serial.print("Set closest to: ");
-      Serial.print(closestReading);
-      Serial.print(" for sensor: ");
-      Serial.println(closestSensor);
+      // Serial.print("Set closest to: ");
+      // Serial.print(closestReading);
+      // Serial.print(" for sensor: ");
+      // Serial.println(closestSensor);
       #endif
     }
     if (cm[i] > farthestReading) {
       farthestReading = cm[i];
       farthestSensor = i;
       #ifdef DEBUG_
-      Serial.print("Set farthest to: ");
-      Serial.print(farthestReading);
-      Serial.print(" for sensor: ");
-      Serial.println(farthestSensor);
+      // Serial.print("Set farthest to: ");
+      // Serial.print(farthestReading);
+      // Serial.print(" for sensor: ");
+      // Serial.println(farthestSensor);
       #endif
     }
   }
@@ -255,8 +260,8 @@ void updateSensorStats() { // Sensor ping  complete, reexmine the full set of re
 void refreshDisplay() {
   if (!displayed_) {
     #ifdef DEBUG_
-    Serial.print("refresh ");
-    Serial.println(display_mode_);
+    // Serial.print("refresh ");
+    // Serial.println(display_mode_);
     #endif
     switch (display_mode_) {
       case DISPLAY_MODE_HISTOGRAM:
@@ -278,10 +283,10 @@ void displayQuadrantMap() {
   Serial.println(farthestReading);
   #endif
   matrix.clear();      // clear display
-  mapQuadrantForSensors(0, 7);
-  mapQuadrantForSensors(2, 1);
-  mapQuadrantForSensors(4, 3);
-  mapQuadrantForSensors(6, 5);
+  mapQuadrantForSensors(0, 1);
+  mapQuadrantForSensors(2, 3);
+  mapQuadrantForSensors(4, 5);
+  mapQuadrantForSensors(6, 7);
   matrix.writeDisplay();  // write the changes we just made to the display
 }
 
@@ -422,7 +427,7 @@ void handleCmd() {
         break;;
     }
   remote_cmd_ = REMOTE_CMD_NONE;  // Reset our command tracking
-  }
+  } 
 }
 
 void loop() {
