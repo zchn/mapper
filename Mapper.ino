@@ -69,14 +69,14 @@ NewPing sonar[SONAR_NUM] = {     // Sensor object array.
   // side 1
   NewPing(2, 3, MAX_DISTANCE), // Each sensor's trigger pin, echo pin, and max distance to ping.
   NewPing(5, 6, MAX_DISTANCE),
-  
+ 
   NewPing(21, 20, MAX_DISTANCE),
   NewPing(23, 22, MAX_DISTANCE),
-  
-  // side 2  
+ 
+  // side 2 
   NewPing(15, 14, MAX_DISTANCE),
   NewPing(17, 16, MAX_DISTANCE),
-  
+ 
   NewPing(8, 9, MAX_DISTANCE),
   NewPing(11, 12, MAX_DISTANCE),
 
@@ -427,7 +427,7 @@ void handleCmd() {
         break;;
     }
   remote_cmd_ = REMOTE_CMD_NONE;  // Reset our command tracking
-  } 
+  }
 }
 
 void loop() {
